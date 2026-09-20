@@ -13,13 +13,17 @@ router = APIRouter()
 async def health_check():
     """
     GET /api/v1/health
-    Returns system status and database connectivity details.
+    Returns system status and database connectivity details safely.
     """
-    db_healthy = check_db_health()
+    try:
+        db_healthy = check_db_health()
+    except Exception:
+        db_healthy = False
+
     return {
         "status": "ok",
         "service": "EduPath API",
-        "version": settings.VERSION,
-        "environment": settings.ENVIRONMENT,
+        "version": getattr(settings, "VERSION", "0.1.0"),
+        "environment": getattr(settings, "ENVIRONMENT", "production"),
         "database": "connected" if db_healthy else "disconnected",
     }
