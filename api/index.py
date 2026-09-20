@@ -1,5 +1,6 @@
 import os
 import sys
+from mangum import Mangum
 
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 backend_dir = os.path.join(root_dir, "backend")
@@ -9,3 +10,7 @@ for p in [root_dir, backend_dir, os.getcwd(), os.path.join(os.getcwd(), "backend
         sys.path.insert(0, p)
 
 from backend.app.main import app
+
+# Wrap FastAPI ASGI application with Mangum for Vercel serverless environment
+handler = Mangum(app, api_gateway_base_path="/api")
+app = handler
