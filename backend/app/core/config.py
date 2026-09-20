@@ -9,6 +9,8 @@ from typing import List, Union
 from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+_env_files = [f for f in [".env", "backend/.env", "../.env"] if os.path.exists(f)]
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "EduPath"
@@ -37,7 +39,7 @@ class Settings(BaseSettings):
     LLM_API_KEY: str = ""
 
     model_config = SettingsConfigDict(
-        env_file=(".env", "backend/.env", "../.env"),
+        env_file=tuple(_env_files) if _env_files else None,
         env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=True,

@@ -5,6 +5,7 @@ Configures application lifecycle, database initialization, CORS, global error ha
 and API version 1 routing.
 """
 
+import traceback
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
@@ -38,20 +39,22 @@ app = FastAPI(
 # Setup CORS
 setup_cors(app)
 
-# Include API v1 router
+# Include API v1 router with both /api/v1 prefix and v1 prefix for serverless routing flexibility
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(api_router, prefix="/v1")
 
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Centralized exception handler providing structured JSON error responses."""
-    logger.error(f"Unhandled Server Error on {request.method} {request.url.path}: {str(exc)}")
+    err_msg = str(exc) or exc.__class__.__name__
+    logger.error(f"Unhandled Server Error on {request.method} {request.url.path}: {err_msg}\n{traceback.format_exc()}")
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "error": {
                 "code": "INTERNAL_SERVER_ERROR",
-                "message": "An unexpected error occurred on the server.",
+                "message": err_msg,
                 "path": str(request.url.path),
             }
         },
@@ -59,9 +62,12 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 @app.get("/")
+@app.get("/api")
+@app.get("/health")
 async def root():
-    """Root application endpoint redirecting to health check and docs."""
+    """Root application endpoint redirecting to health check and status."""
     return {
+        "status": "ok",
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "docs": "/docs",
