@@ -1,28 +1,35 @@
 import os
 import sys
+import traceback
 
-# Dynamically resolve paths for Vercel serverless environment
-cwd = os.getcwd()
-file_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(file_dir)
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+backend_dir = os.path.join(root_dir, "backend")
 
-for path in [cwd, file_dir, parent_dir, os.path.join(cwd, "backend"), os.path.join(parent_dir, "backend")]:
-    if path and os.path.exists(path) and path not in sys.path:
-        sys.path.insert(0, path)
+for p in [root_dir, backend_dir, os.getcwd(), os.path.join(os.getcwd(), "backend")]:
+    if p and p not in sys.path:
+        sys.path.insert(0, p)
 
 try:
-    from backend.app.main import app as _fastapi_app
-except ImportError:
-    from app.main import app as _fastapi_app
+    from backend.app.main import app as _app
+except Exception as e1:
+    try:
+        from app.main import app as _app
+    except Exception as e2:
+        from fastapi import FastAPI
+        from fastapi.responses import JSONResponse
+        _app = FastAPI()
 
-# Warm up database connection if configured
-try:
-    from app.core.database import connect_to_mongo
-    connect_to_mongo()
-except Exception:
-    pass
+        @_app.all("/{full_path:path}")
+        async def fallback_err(full_path: str):
+            return JSONResponse(
+                {
+                    "error": "import_failed",
+                    "e1": str(e1),
+                    "e2": str(e2),
+                    "trace": traceback.format_exc(),
+                },
+                status_code=500,
+            )
 
-# Expose top-level variables required by Vercel Python runtime AST inspection
-app = _fastapi_app
+app = _app
 handler = app
-application = app
