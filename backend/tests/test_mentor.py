@@ -134,7 +134,7 @@ async def test_mentor_intents_fallback():
 
     # 3. Explanation in simple words
     r3 = await agent.execute({"user_id": user_id, "message": "Explain this in simple words"})
-    assert "simple" in r3.response.lower() or "think of" in r3.response.lower() or "heart" in r3.response.lower()
+    assert "simple way to think about" in r3.response.lower() or "simple" in r3.response.lower()
 
     # 4. Example question
     r5 = await agent.execute({"user_id": user_id, "message": "Give me an example"})

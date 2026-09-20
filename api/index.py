@@ -11,9 +11,6 @@ if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 from backend.app.main import app
-from backend.app.core.database import connect_to_mongo
 
-# Initialize database connection for serverless function environment
-connect_to_mongo()
-
+# Vercel serverless function entrypoint exposes the FastAPI ASGI application
 __all__ = ["app"]

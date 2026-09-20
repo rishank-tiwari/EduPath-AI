@@ -1,8 +1,8 @@
 """
 MongoDB Connection Infrastructure for EduPath Backend.
 
-Handles database connection setup with PyMongo. Supports lazy connection initialization
-suitable for serverless environments (Vercel) while accurately preserving DB offline error handling.
+Handles database connection setup with PyMongo. Does not crash server on startup
+if database is unreachable or unconfigured during initial development phases.
 """
 
 import logging
@@ -21,15 +21,12 @@ class DatabaseConnectionError(Exception):
 class Database:
     client: Optional[MongoClient] = None
     db = None
-    _initialized: bool = False
-
 
 db_manager = Database()
 
 
 def connect_to_mongo():
     """Establishes connection to MongoDB Atlas or local MongoDB instance."""
-    db_manager._initialized = True
     if not settings.MONGODB_URI:
         logger.warning("MONGODB_URI is not set. Database connection skipped.")
         return
@@ -63,8 +60,6 @@ def close_mongo_connection():
 
 def check_db_health() -> bool:
     """Returns True if database connection is active and healthy."""
-    if not db_manager._initialized and settings.MONGODB_URI:
-        connect_to_mongo()
     if db_manager.client is None:
         return False
     try:
