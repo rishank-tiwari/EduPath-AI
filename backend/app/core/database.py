@@ -58,8 +58,16 @@ def close_mongo_connection():
         logger.info("Closed MongoDB connection.")
 
 
+def get_db():
+    """Returns database reference, attempting lazy connection if not connected."""
+    if db_manager.db is None and settings.MONGODB_URI:
+        connect_to_mongo()
+    return db_manager.db
+
+
 def check_db_health() -> bool:
     """Returns True if database connection is active and healthy."""
+    db = get_db()
     if db_manager.client is None:
         return False
     try:
@@ -67,3 +75,4 @@ def check_db_health() -> bool:
         return True
     except Exception:
         return False
+
