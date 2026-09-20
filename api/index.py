@@ -1,23 +1,25 @@
 import os
 import sys
 
-# Add project root and backend directory to sys.path so modules like app and ai can be imported cleanly
-root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-backend_dir = os.path.join(root_dir, "backend")
+# Dynamically resolve paths for Vercel serverless environment
+cwd = os.getcwd()
+file_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(file_dir)
 
-if root_dir not in sys.path:
-    sys.path.insert(0, root_dir)
-if backend_dir not in sys.path:
-    sys.path.insert(0, backend_dir)
+for path in [cwd, file_dir, parent_dir, os.path.join(cwd, "backend"), os.path.join(parent_dir, "backend")]:
+    if path and os.path.exists(path) and path not in sys.path:
+        sys.path.insert(0, path)
 
-from backend.app.main import app
-from backend.app.core.database import connect_to_mongo
-
-# Initialize DB connection for serverless runtime
 try:
+    from backend.app.main import app
+except ImportError:
+    from app.main import app
+
+# Warm up database connection if configured
+try:
+    from app.core.database import connect_to_mongo
     connect_to_mongo()
 except Exception:
     pass
 
 __all__ = ["app"]
-
