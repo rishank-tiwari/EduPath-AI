@@ -17,7 +17,7 @@ from app.utils.logger import logger
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application startup and shutdown event handlers for standalone Uvicorn."""
+    """Application startup and shutdown event handlers."""
     logger.info("Initializing EduPath API backend...")
     connect_to_mongo()
     yield
@@ -37,9 +37,6 @@ app = FastAPI(
 
 # Setup CORS
 setup_cors(app)
-
-# Ensure DB connection attempt occurs in serverless environments (e.g., Vercel)
-connect_to_mongo()
 
 # Include API v1 router
 app.include_router(api_router, prefix=settings.API_V1_STR)

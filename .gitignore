@@ -6,12 +6,6 @@ venv/
 env/
 .env
 
-# Local Database Files & Binaries
-backend/data/
-backend/mongodb/
-backend/venv/
-data/
-
 # Environment files
 .env
 .env.local
@@ -76,3 +70,6 @@ yarn-error.log*
 pnpm-debug.log*
 
 .vercel
+backend/data/
+backend/mongodb/
+
