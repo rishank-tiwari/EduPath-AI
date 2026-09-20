@@ -73,3 +73,4 @@ pnpm-debug.log*
 backend/data/
 backend/mongodb/
 
+.vercel
