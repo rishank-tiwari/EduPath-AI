@@ -1,0 +1,1 @@
+"""EduPath Pydantic schemas package."""

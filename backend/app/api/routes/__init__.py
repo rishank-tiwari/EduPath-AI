@@ -1,0 +1,1 @@
+"""EduPath API routes package."""
