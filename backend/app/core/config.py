@@ -6,7 +6,7 @@ Reads environment variables safely using Pydantic BaseSettings.
 
 import os
 from typing import List, Union
-from pydantic import AnyHttpUrl, validator
+from pydantic import AnyHttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     # CORS configuration
     FRONTEND_URL: str = "http://localhost:5173"
     BACKEND_URL: str = "http://localhost:8000"
-    CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    CORS_ORIGINS: Union[List[str], str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
     # Database Settings
     MONGODB_URI: str = "mongodb://localhost:27017"
@@ -42,7 +42,6 @@ class Settings(BaseSettings):
         extra="ignore",
         case_sensitive=True,
     )
-
 
 
 settings = Settings()
