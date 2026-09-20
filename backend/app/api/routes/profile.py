@@ -48,11 +48,19 @@ async def get_profile(user_id: str = Query("demo_user_1", description="Learner U
                 detail=f"Learner profile for user_id '{user_id}' not found.",
             )
         return profile
+    except HTTPException:
+        raise
     except DatabaseConnectionError as err:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE if hasattr(status, 'HTTP_503_SERVICE_UNAVAILABLE') else 503,
             detail=f"Database service unavailable: {str(err)}",
         )
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve profile: {str(err)}",
+        )
+
 
 
 @router.get("/evidence", status_code=status.HTTP_200_OK)

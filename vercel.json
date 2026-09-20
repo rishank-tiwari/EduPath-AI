@@ -1,12 +1,16 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
+  "version": 2,
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
+  "functions": {
+    "api/index.py": {
+      "excludeFiles": "{frontend/**,docs/**,scripts/**,venv/**,backend/venv/**,backend/data/**,backend/mongodb/**,.git/**}"
     }
+  },
+  "rewrites": [
+    { "source": "/api/v1/:path*", "destination": "/api/index.py" },
+    { "source": "/docs", "destination": "/api/index.py" },
+    { "source": "/openapi.json", "destination": "/api/index.py" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

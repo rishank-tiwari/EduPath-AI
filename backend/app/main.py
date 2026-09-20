@@ -5,7 +5,6 @@ Configures application lifecycle, database initialization, CORS, global error ha
 and API version 1 routing.
 """
 
-import traceback
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
@@ -39,35 +38,51 @@ app = FastAPI(
 # Setup CORS
 setup_cors(app)
 
-# Include API v1 router with both /api/v1 prefix and v1 prefix for serverless routing flexibility
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+# Include API v1 router
 app.include_router(api_router, prefix=settings.API_V1_STR)
-app.include_router(api_router, prefix="/v1")
 
 
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
-    """Centralized exception handler providing structured JSON error responses."""
-    err_msg = str(exc) or exc.__class__.__name__
-    logger.error(f"Unhandled Server Error on {request.method} {request.url.path}: {err_msg}\n{traceback.format_exc()}")
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Preserves HTTP status code and detail for intentional HTTPExceptions (e.g., 404, 400, 401, 503)."""
+    detail_msg = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
     return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        status_code=exc.status_code,
         content={
+            "detail": detail_msg,
             "error": {
-                "code": "INTERNAL_SERVER_ERROR",
-                "message": err_msg,
+                "code": "NOT_FOUND" if exc.status_code == 404 else ("UNAUTHORIZED" if exc.status_code == 401 else "HTTP_ERROR"),
+                "message": detail_msg,
                 "path": str(request.url.path),
             }
         },
     )
 
 
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Centralized exception handler providing structured JSON error responses for unexpected server errors."""
+    logger.error(f"Unhandled Server Error on {request.method} {request.url.path}: {str(exc)}")
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={
+            "error": {
+                "code": "INTERNAL_SERVER_ERROR",
+                "message": "An unexpected error occurred on the server.",
+                "path": str(request.url.path),
+            }
+        },
+    )
+
+
+
 @app.get("/")
-@app.get("/api")
-@app.get("/health")
 async def root():
-    """Root application endpoint redirecting to health check and status."""
+    """Root application endpoint redirecting to health check and docs."""
     return {
-        "status": "ok",
         "service": settings.PROJECT_NAME,
         "version": settings.VERSION,
         "docs": "/docs",
