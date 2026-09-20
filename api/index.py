@@ -11,9 +11,9 @@ for path in [cwd, file_dir, parent_dir, os.path.join(cwd, "backend"), os.path.jo
         sys.path.insert(0, path)
 
 try:
-    from backend.app.main import app
+    from backend.app.main import app as _fastapi_app
 except ImportError:
-    from app.main import app
+    from app.main import app as _fastapi_app
 
 # Warm up database connection if configured
 try:
@@ -22,4 +22,7 @@ try:
 except Exception:
     pass
 
-__all__ = ["app"]
+# Expose top-level variables required by Vercel Python runtime AST inspection
+app = _fastapi_app
+handler = app
+application = app
